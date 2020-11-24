@@ -1,4 +1,7 @@
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.ArrayDeque;
+
 public class l001 {
 
     // u, v are vertices
@@ -37,7 +40,10 @@ public class l001 {
 
     public static void solve2() {
 
-       hamiltonian();
+        // hamiltonian();
+        // gcc();
+        // BFS_01(0, new boolean[N]);
+        BFS_LevelWise(0, new boolean[N]);
     }
 
     // --------------------------------------------------------GRAPH-CONTRUCTION---------------------------------------
@@ -275,5 +281,110 @@ public class l001 {
     }
 
     // -------------------------------------------------------------------------------------------------------
+
+    // ----------------------------------------------DFS-AND-GCC----------------------------------------------
+
+    public static int dfs(int src, boolean[] vis) {
+
+        vis[src] = true;
+        int count = 0;
+
+        for(Edge e : graph[src]) {
+            if(!vis[e.v]) {
+                count += dfs(e.v, vis);
+            }
+        }
+
+        return count + 1; // +1 for own count
+    }
+
+    // get connected components
+    public static void gcc() {
+
+        int count = 0; // no of components present in graph
+        int totalArea = 0; // total no of vtx in whole graph
+
+        boolean vis[] = new boolean[N];
+
+        for(int i = 0; i < N; i++) {
+            if(!vis[i]) {
+                count++;
+                totalArea += dfs(i, vis);
+            }
+        }
+
+        System.out.println("There are total " + count + " components in graph");
+        System.out.println("There are total " + totalArea + " vertices in graph");
+    }
+
+    // ------------------------------------------------------------------------
+
+    // ------------------------------------------BFS------------------------------------
+
+    // Normal BFS
+    public static void BFS_01(int src, boolean[] vis) {
+
+        LinkedList<Integer> que = new LinkedList<> ();
+        que.addLast(src);
+
+        while(que.size() != 0) {
+            int size = que.size();
+
+            while(size-- > 0) {
+                int vtx = que.removeFirst();
+
+                if(vis[vtx]) {
+                    System.out.println("Cycle found at " + vtx + " vertex " );
+                    continue;
+                    // if you add again it will form the cycle
+                }
+                vis[vtx] = true;
+
+                for(Edge e : graph[vtx]) {
+                    if(!vis[e.v] ) {
+                        que.addLast(e.v);
+                    }
+                }
+            }
+        }
+    }
+
+    //----NOTE : ARRAYDEQUE WORKS FASTER FOR INSERTION AND DELETION FROM BOTH ENDS THAN LINKEDLIST
+    // BUT IT DOES NOT SUPPORTS NULL VALUE----
+
+    // Level-wise BFS
+    // To print level-wise use 2 while loops(one inside one)
+    public static void BFS_LevelWise(int src, boolean[] vis) {
+
+        ArrayDeque<Integer> que = new ArrayDeque<> ();
+        que.addLast(src);
+
+        int level = 1;
+        while(que.size() != 0) {
+
+            int size = que.size();
+            System.out.print("Level " + level + " - > ");
+
+            while(size-- > 0) {
+                int vtx = que.remove();
+
+                if(vis[vtx]) {
+                    // cycle found because already visited
+                    continue;
+                }
+                
+                vis[vtx] = true;
+                System.out.print(vtx + ", ");
+                for(Edge e : graph[vtx]) {
+
+                    if(!vis[e.v]) {
+                        que.addLast(e.v);
+                    }
+                }
+            }
+            level++;
+            System.out.println(".");
+        }
+    }
 
 }
