@@ -365,5 +365,223 @@ public class questions {
         }
         return -1;// if not possible then return -1
     }
+
+    // 2. Sir's Approach
+    public int shortestPathBinaryMatrix(int[][] grid) {
+        
+        if(grid.length == 0 || grid[0].length == 0) return 0;
+        
+        int n = grid.length, m = grid[0].length;
+        
+        if(grid[0][0] == 1 || grid[n-1][m-1] == 1) return -1;
+        // if no path is possible to traverse
+        
+        ArrayDeque<int[]> que = new ArrayDeque<> ();
+        
+        que.add(new int[]{0,0});
+        grid[0][0] = 1; // 1st elt is visited
+        
+        int level = 1; 
+        // start from 1 because we want to count steps till bottom right and
+        // 1 signifies that we have taken step for (0,0) elt
+        
+        int dir[][] = { {-1, 0}, {-1, 1}, {0, 1}, {1, 1}, {1, 0}, {1,-1}, {0, -1}, {-1,-1} };
+        
+        while(que.size() > 0) {
+            
+            int size = que.size();
+            while(size-- > 0) {
+                
+                int rvtx[] = que.removeFirst();
+                
+                int r = rvtx[0];
+                int c = rvtx[1];
+                
+                if(r == n-1 && c == n-1) {
+                    // when it reached 1st time return
+                    return level;
+
+                }
+                for(int d[] : dir) {
+                    
+                    int x = r + d[0];
+                    int y = c + d[1];
+                    
+                    if(x >= 0 && y >= 0 && x < n && y < m && grid[x][y] == 0) {
+                        
+                        grid[x][y] = 1;
+                        que.addLast(new int[] {x,y});
+                        // traverse bfs wise   
+                    }  
+                }  
+            }
+            level++;
+        }
+        return -1; // if no path found
+    }
+
+    // 542. 01 Matrix
+    // https://leetcode.com/problems/01-matrix/
+
+    // BFS to find nearest zero for each elt
+    public int[][] updateMatrix(int[][] matrix) {
+        
+        int n = matrix.length, m = matrix[0].length;
+        
+        int[][] vis = new int[n][m]; 
+        // answer array
+        for(int a[] : vis) Arrays.fill(a, -1); 
+        // marking locationsas unvisited
+                
+        ArrayDeque<Integer> que = new ArrayDeque<> ();
+        for(int i = 0; i < n; i++) {
+            for(int j = 0; j < m; j++) {
+                if(matrix[i][j] == 0) {
+                    // add all zeroes in queue so that they will reach to all 1's 
+                    // and update the distance to them
+                    que.addLast( i*m + j);
+                    vis[i][j] = 0;
+                }
+            }
+        }
+
+        int dir[][] = { {0,1}, {0,-1}, {1,0}, {-1,0} };
+        
+        while(que.size() > 0) {
+            
+            int size = que.size();
+            while(size-- > 0) {
+                
+                int loc = que.removeFirst();
+                
+                int r = loc/m;
+                int c = loc%m;
+                
+                for(int d[]: dir) {
+                    
+                    int x = r + d[0];
+                    int y = c + d[1];
+                    
+                    if(x >= 0 && y >= 0 && x < n && y < m && vis[x][y] == -1) {
+                        vis[x][y] = vis[r][c] + 1; // 0 can be reached 1 step + neighbour value
+                        // or you can use level here also
+                        que.addLast(x*m + y); // for next elts
+                    }
+                }
+                
+            }
+        }
+        return vis;
+    }
+
+    // 1020. Number of Enclaves
+    // https://leetcode.com/problems/number-of-enclaves/
+
+    // Q -> Count no of 1's through which we cannot walk off the boundaries of matrix ( 0 is water, 1 is land)
     
+    // 1. Using dfs(easy)
+    public int numEnclaves(int[][] A) {
+        
+        int n = A.length, m = A[0].length;
+        int dir[][] = { {0,1}, {0,-1}, {1,0}, {-1,0} };
+        
+        for(int i = 0; i < n; i++) {
+            for(int j = 0; j < m; j++) {
+                // process all boundaries elts
+                if(i == 0 || j == 0 || i == n-1 || j == m-1) {
+                    if(A[i][j] == 1) {
+                        fillBoundaries(A, i, j, dir);
+                    }
+                }
+            }
+        }
+        
+        // Now count the number of left-out 1's
+        int count = 0;
+        for(int i = 0; i < n; i++) {
+            for(int j = 0; j < m; j++) {
+                if(A[i][j] == 1) count++;
+            }
+        }
+        return count;
+    }
+    // floodFill DFS
+    public void fillBoundaries(int arr[][], int i, int j, int dir[][]) {
+        
+        arr[i][j] = 0;
+        for(int d[] : dir) {
+            int x = d[0] + i;
+            int y = d[1] + j;
+            
+            if( x >= 0 && y >= 0 && x < arr.length && y < arr[0].length && arr[x][y] == 1 ) {
+                fillBoundaries(arr, x, y, dir);
+            }
+        }
+    }
+
+    // 2. Using BFS (Complicated (DFS is easy))
+    // if solving using example in copy then only read this 
+    public int numEnclaves(int[][] A) {
+        
+        int n = A.length, m = A[0].length;
+        
+        ArrayDeque<Integer> que = new ArrayDeque<> ();
+        int ones = 0;
+        
+        for(int i = 0 ;i < n; i++) {
+            for(int j = 0; j < m ;j++) {
+                
+                ones += A[i][j];
+                // It will only plus one values because other values are 0 
+                // and that will not make any effect on count value
+                
+                if((i == 0 || j == 0 || i == n-1 || j == m-1) && A[i][j] == 1) {
+                    
+                    A[i][j] = 0;
+                    // most important if you do not mark this
+                    // than recursion can go back again to this state 
+                    
+                    que.addLast( i*m + j);  
+                    ones --;
+                    // remove the boundary ones
+                }
+            }
+        }
+        if(ones == 0) return 0;
+        int dir[][] = { {0,1}, {0,-1}, {-1,0}, {1,0} };
+        
+        while(que.size() > 0) {
+            int size = que.size();
+            
+            while(size-- > 0) {
+                
+                int rVtx = que.removeFirst();
+                
+                int r = rVtx / m;
+                int c = rVtx % m;
+                
+                for(int d[] : dir) {
+                    
+                    int x = r + d[0];
+                    int y = c + d[1];
+                    
+                    if(x >= 0 && y >= 0 && x < n && y < m && A[x][y] == 1) {
+                        
+                        A[x][y] = 0;
+                        que.addLast( x*m + y);
+                        
+                        ones--;
+                        // remove the boundary flood filled ones
+                    }
+                }
+            }
+            if(ones == 0) break;
+            // if no one is left then break
+        }
+        
+        return ones;
+    }
+    
+    
+
 }
